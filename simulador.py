@@ -3,28 +3,6 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Função para carregar os dados do Excel
-def carregar_dados():
-    try:
-        # Carrega o arquivo Excel
-        arquivo_excel = pd.ExcelFile('dados.xlsx')
-        
-        # Verifica se a planilha 'Veiculos' existe
-        if 'Veiculos' not in arquivo_excel.sheet_names:
-            st.error("Erro: A planilha 'Veiculos' não foi encontrada no arquivo Excel.")
-            return pd.DataFrame()  # Retorna um DataFrame vazio em caso de erro
-        
-        # Carrega a planilha 'Veiculos'
-        dados = arquivo_excel.parse('Veiculos')
-        st.success("Arquivo Excel carregado com sucesso!")
-        return dados
-    except FileNotFoundError:
-        st.error("Erro: Arquivo 'dados.xlsx' não encontrado.")
-        return pd.DataFrame()  # Retorna um DataFrame vazio em caso de erro
-    except Exception as e:
-        st.error(f"Erro ao carregar o arquivo Excel: {e}")
-        return pd.DataFrame()  # Retorna um DataFrame vazio em caso de erro
-
 # Função para calcular a eficiência final
 def calcular_eficiencia_final(veiculo, volume_vendas):
     eficiencia_base = veiculo['Eficiência Energética (MJ/km)']
@@ -38,25 +16,51 @@ def calcular_eficiencia_final(veiculo, volume_vendas):
 # Interface do Streamlit
 st.title('Simulador de Eficiência Energética de Veículos')
 
-# Carregar dados dos veículos
-dados_veiculos = carregar_dados()
+# Inserir dados dos veículos manualmente
+st.subheader('Inserir Dados dos Veículos')
 
-# Verificar se os dados foram carregados corretamente
-if not dados_veiculos.empty:
-    # Exibir tabela de veículos
-    st.subheader('Dados dos Veículos')
-    st.write(dados_veiculos)
+# Número de veículos a serem cadastrados
+num_veiculos = st.number_input('Quantos veículos deseja cadastrar?', min_value=1, value=1)
+
+# Lista para armazenar os dados dos veículos
+dados_veiculos = []
+
+# Loop para coletar os dados de cada veículo
+for i in range(num_veiculos):
+    st.markdown(f"### Veículo {i + 1}")
+    modelo = st.text_input(f'Nome do Veículo {i + 1}', key=f'modelo_{i}')
+    peso = st.number_input(f'Peso (kg) do Veículo {i + 1}', min_value=0, value=1500, key=f'peso_{i}')
+    eficiencia = st.number_input(f'Eficiência Energética (MJ/km) do Veículo {i + 1}', min_value=0.0, value=1.8, key=f'eficiencia_{i}')
+    tipo_combustivel = st.selectbox(f'Tipo de Combustível do Veículo {i + 1}', ['FLEX', 'GASOLINA'], key=f'tipo_{i}')
+    fator_etanol = st.number_input(f'Fator Etanol do Veículo {i + 1}', min_value=0.0, value=1.5, key=f'fator_{i}')
+
+    # Adicionar os dados do veículo à lista
+    dados_veiculos.append({
+        'Modelo': modelo,
+        'Peso (kg)': peso,
+        'Eficiência Energética (MJ/km)': eficiencia,
+        'Tipo Combustível': tipo_combustivel,
+        'Fator Etanol': fator_etanol
+    })
+
+# Converter a lista de veículos em um DataFrame
+dados_veiculos_df = pd.DataFrame(dados_veiculos)
+
+# Exibir tabela de veículos cadastrados
+if not dados_veiculos_df.empty:
+    st.subheader('Veículos Cadastrados')
+    st.write(dados_veiculos_df)
 
     # Inserir volumes de vendas
     st.subheader('Inserir Volumes de Vendas')
     volumes_vendas = {}
-    for modelo in dados_veiculos['Modelo']:
-        volumes_vendas[modelo] = st.number_input(f'Volume de vendas para {modelo}', min_value=0, value=100)
+    for veiculo in dados_veiculos_df['Modelo']:
+        volumes_vendas[veiculo] = st.number_input(f'Volume de vendas para {veiculo}', min_value=0, value=100)
 
     # Simular
     if st.button('Simular'):
         resultados = []
-        for index, veiculo in dados_veiculos.iterrows():
+        for index, veiculo in dados_veiculos_df.iterrows():
             eficiencia_final = calcular_eficiencia_final(veiculo, volumes_vendas[veiculo['Modelo']])
             resultados.append({
                 'Modelo': veiculo['Modelo'],
@@ -89,4 +93,4 @@ if not dados_veiculos.empty:
         plt.title('Relação entre Volume de Vendas e Eficiência')
         st.pyplot(plt)
 else:
-    st.warning("Não foi possível carregar os dados dos veículos. Verifique o arquivo Excel.")
+    st.warning("Nenhum veículo cadastrado. Insira os dados dos veículos acima.")

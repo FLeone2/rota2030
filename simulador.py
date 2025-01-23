@@ -6,11 +6,20 @@ import seaborn as sns
 # Função para carregar os dados do Excel
 def carregar_dados():
     try:
-        dados = pd.read_excel('dados_veiculos.xlsx', sheet_name='Veiculos')
+        # Carrega o arquivo Excel
+        arquivo_excel = pd.ExcelFile('dados.xlsx')
+        
+        # Verifica se a planilha 'Veiculos' existe
+        if 'Veiculos' not in arquivo_excel.sheet_names:
+            st.error("Erro: A planilha 'Veiculos' não foi encontrada no arquivo Excel.")
+            return pd.DataFrame()  # Retorna um DataFrame vazio em caso de erro
+        
+        # Carrega a planilha 'Veiculos'
+        dados = arquivo_excel.parse('Veiculos')
         st.success("Arquivo Excel carregado com sucesso!")
         return dados
     except FileNotFoundError:
-        st.error("Erro: Arquivo 'dados_veiculos.xlsx' não encontrado.")
+        st.error("Erro: Arquivo 'dados.xlsx' não encontrado.")
         return pd.DataFrame()  # Retorna um DataFrame vazio em caso de erro
     except Exception as e:
         st.error(f"Erro ao carregar o arquivo Excel: {e}")

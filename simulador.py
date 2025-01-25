@@ -69,24 +69,22 @@ def editar_carro(index):
         }
         st.success(f"Carro '{nome}' atualizado com sucesso!")
 
-# Função para listar todos os carros
+# Função para listar todos os carros em formato de tabela
 def listar_carros():
     st.subheader("Lista de Carros")
     if not st.session_state.carros:
         st.write("Nenhum carro cadastrado.")
     else:
-        for i, carro in enumerate(st.session_state.carros, start=1):
-            st.write(f"**Carro {i}:**")
-            st.write(f"- Nome: {carro['Nome']}")
-            st.write(f"- Peso: {carro['Peso']} kg")
-            st.write(f"- Eficiência: {carro['Eficiência']} km/L")
-            st.write(f"- Valor Bin: {carro['Valor Bin']}")
-            st.write(f"- Tipo de Combustível: {carro['Tipo de Combustível']}")
-            st.write(f"- Curva: {carro['Curva']}")
-            st.write(f"- Meta de Eficiência: {carro['Meta de Eficiência']:.4f} km/L")
-            if st.button(f"Editar Carro {i}"):
-                st.session_state.editar_index = i - 1
-            st.write("---")
+        # Criar um DataFrame com os carros
+        df_carros = pd.DataFrame(st.session_state.carros)
+        
+        # Exibir a tabela
+        st.dataframe(df_carros)
+        
+        # Adicionar botões de edição para cada carro
+        for i, carro in enumerate(st.session_state.carros):
+            if st.button(f"Editar Carro {i + 1}"):
+                st.session_state.editar_index = i
 
 # Função para exibir resultados em uma tabela
 def exibir_resultados():

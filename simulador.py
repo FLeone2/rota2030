@@ -8,14 +8,34 @@ st.title("Simulador de Eficiência Energética para Carros")
 if 'carros' not in st.session_state:
     st.session_state.carros = []
 
-# Função para calcular a meta de eficiência
-def calcular_meta_eficiencia(curva, peso):
+# Função para calcular a meta de eficiência original
+def calcular_meta_original(curva, peso):
     if curva == "Curva 1":
         return 1.028297 + (0.000528 * peso)
     elif curva == "Curva 2":
         return 0.790141 + (0.000801 * peso)
     elif curva == "Curva 3":
         return 0.566827 + (0.001103 * peso)
+    return 0
+
+# Função para calcular a meta de -1 p.p.
+def calcular_meta_menos_1pp(curva, peso):
+    if curva == "Curva 1":
+        return 0.9702 + (0.000498 * peso)
+    elif curva == "Curva 2":
+        return 0.745531 + (0.000756 * peso)
+    elif curva == "Curva 3":
+        return 0.534825 + (0.001041 * peso)
+    return 0
+
+# Função para calcular a meta de -2 p.p.
+def calcular_meta_menos_2pp(curva, peso):
+    if curva == "Curva 1":
+        return 0.920304 + (0.000473 * peso)
+    elif curva == "Curva 2":
+        return 0.70719 + (0.000717 * peso)
+    elif curva == "Curva 3":
+        return 0.50732 + (0.000988 * peso)
     return 0
 
 # Função para adicionar um carro
@@ -39,7 +59,9 @@ def adicionar_carro():
             "Valor Bin": valor_bin,
             "Tipo de Combustível": tipo_combustivel,
             "Curva": curva,
-            "Meta de Eficiência": calcular_meta_eficiencia(curva, peso)
+            "Meta Original": calcular_meta_original(curva, peso),
+            "Meta -1 p.p.": calcular_meta_menos_1pp(curva, peso),
+            "Meta -2 p.p.": calcular_meta_menos_2pp(curva, peso)
         }
         st.session_state.carros.append(carro)
         st.success(f"Carro '{nome}' adicionado com sucesso!")
@@ -65,7 +87,9 @@ def editar_carro(index):
             "Valor Bin": valor_bin,
             "Tipo de Combustível": tipo_combustivel,
             "Curva": curva,
-            "Meta de Eficiência": calcular_meta_eficiencia(curva, peso)
+            "Meta Original": calcular_meta_original(curva, peso),
+            "Meta -1 p.p.": calcular_meta_menos_1pp(curva, peso),
+            "Meta -2 p.p.": calcular_meta_menos_2pp(curva, peso)
         }
         st.success(f"Carro '{nome}' atualizado com sucesso!")
 

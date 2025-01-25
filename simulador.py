@@ -8,10 +8,6 @@ st.title("Simulador de Eficiência Energética para Carros")
 if 'carros' not in st.session_state:
     st.session_state.carros = []
 
-# Lista para armazenar os volumes de vendas
-if 'volumes_vendas' not in st.session_state:
-    st.session_state.volumes_vendas = {}
-
 # Função para calcular a meta de eficiência original
 def calcular_meta_original(curva, peso):
     if curva == "Curva 1":
@@ -65,10 +61,10 @@ def adicionar_carro():
             "Curva": curva,
             "Meta Original": calcular_meta_original(curva, peso),
             "Meta -1 p.p.": calcular_meta_menos_1pp(curva, peso),
-            "Meta -2 p.p.": calcular_meta_menos_2pp(curva, peso)
+            "Meta -2 p.p.": calcular_meta_menos_2pp(curva, peso),
+            "Volumes": []  # Lista para armazenar os volumes de vendas
         }
         st.session_state.carros.append(carro)
-        st.session_state.volumes_vendas[nome] = {}
         st.success(f"Carro '{nome}' adicionado com sucesso!")
 
 # Função para editar um carro
@@ -94,7 +90,8 @@ def editar_carro(index):
             "Curva": curva,
             "Meta Original": calcular_meta_original(curva, peso),
             "Meta -1 p.p.": calcular_meta_menos_1pp(curva, peso),
-            "Meta -2 p.p.": calcular_meta_menos_2pp(curva, peso)
+            "Meta -2 p.p.": calcular_meta_menos_2pp(curva, peso),
+            "Volumes": st.session_state.carros[index]['Volumes']  # Manter os volumes existentes
         }
         st.success(f"Carro '{nome}' atualizado com sucesso!")
 
@@ -150,24 +147,24 @@ def gerenciar_volumes_vendas():
         # Selecionar um carro
         carro_selecionado = st.selectbox("Selecione um carro", [carro['Nome'] for carro in st.session_state.carros])
         
-        # Verificar se o carro já tem volumes de vendas
-        if carro_selecionado not in st.session_state.volumes_vendas:
-            st.session_state.volumes_vendas[carro_selecionado] = {}
+        # Encontrar o carro selecionado
+        carro = next((carro for carro in st.session_state.carros if carro['Nome'] == carro_selecionado), None)
         
-        # Adicionar um novo mês
-        if st.button("Adicionar Mês"):
-            novo_mes = f"Mês {len(st.session_state.volumes_vendas[carro_selecionado]) + 1}"
-            st.session_state.volumes_vendas[carro_selecionado][novo_mes] = 0
-        
-        # Exibir tabela de volumes de vendas
-        if st.session_state.volumes_vendas[carro_selecionado]:
-            df_volumes = pd.DataFrame.from_dict(st.session_state.volumes_vendas[carro_selecionado], orient='index', columns=["Volume"])
-            df_volumes["Total"] = df_volumes["Volume"].cumsum()
-            st.dataframe(df_volumes)
+        if carro:
+            # Adicionar um novo mês
+            if st.button("Adicionar Mês"):
+                novo_mes = f"Mês {len(carro['Volumes']) + 1}"
+                carro['Volumes'].append({"Mês": novo_mes, "Volume": 0})
             
-            # Editar volumes de vendas
-            for mes in st.session_state.volumes_vendas[carro_selecionado]:
-                st.session_state.volumes_vendas[carro_selecionado][mes] = st.number_input(f"Volume para {mes}", value=st.session_state.volumes_vendas[carro_selecionado][mes], min_value=0)
+            # Exibir tabela de volumes de vendas
+            if carro['Volumes']:
+                df_volumes = pd.DataFrame(carro['Volumes'])
+                df_volumes["Total"] = df_volumes["Volume"].cumsum()
+                st.dataframe(df_volumes)
+                
+                # Editar volumes de vendas
+                for i, volume in enumerate(carro['Volumes']):
+                    carro['Volumes'][i]['Volume'] = st.number_input(f"Volume para {volume['Mês']}", value=volume['Volume'], min_value=0)
 
 # Menu principal
 def menu():

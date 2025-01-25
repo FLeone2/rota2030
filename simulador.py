@@ -62,7 +62,10 @@ def adicionar_carro():
             "Meta Original": calcular_meta_original(curva, peso),
             "Meta -1 p.p.": calcular_meta_menos_1pp(curva, peso),
             "Meta -2 p.p.": calcular_meta_menos_2pp(curva, peso),
-            "Volumes": []  # Lista para armazenar os volumes de vendas
+            "Volumes": {mes: 0 for mes in [
+                "Outubro", "Novembro", "Dezembro", "Janeiro", "Fevereiro", 
+                "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro"
+            ]}  # Dicionário para armazenar os volumes de vendas por mês
         }
         st.session_state.carros.append(carro)
         st.success(f"Carro '{nome}' adicionado com sucesso!")
@@ -151,20 +154,18 @@ def gerenciar_volumes_vendas():
         carro = next((carro for carro in st.session_state.carros if carro['Nome'] == carro_selecionado), None)
         
         if carro:
-            # Adicionar um novo mês
-            if st.button("Adicionar Mês"):
-                novo_mes = f"Mês {len(carro['Volumes']) + 1}"
-                carro['Volumes'].append({"Mês": novo_mes, "Volume": 0})
+            # Criar um DataFrame com os volumes de vendas
+            df_volumes = pd.DataFrame.from_dict(carro['Volumes'], orient='index', columns=["Volume"])
+            df_volumes.index.name = "Mês"
             
-            # Exibir tabela de volumes de vendas
-            if carro['Volumes']:
-                df_volumes = pd.DataFrame(carro['Volumes'])
-                df_volumes["Total"] = df_volumes["Volume"].cumsum()
-                st.dataframe(df_volumes)
-                
-                # Editar volumes de vendas
-                for i, volume in enumerate(carro['Volumes']):
-                    carro['Volumes'][i]['Volume'] = st.number_input(f"Volume para {volume['Mês']}", value=volume['Volume'], min_value=0)
+            # Exibir a tabela de volumes
+            st.write(f"**Volumes de Venda para {carro['Nome']}**")
+            edited_df = st.data_editor(df_volumes, use_container_width=True)
+            
+            # Atualizar os volumes no carro
+            if st.button("Salvar Volumes"):
+                carro['Volumes'] = edited_df.to_dict()["Volume"]
+                st.success("Volumes salvos com sucesso!")
 
 # Menu principal
 def menu():
